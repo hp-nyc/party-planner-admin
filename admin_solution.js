@@ -1,6 +1,6 @@
 // === Constants ===
-const BASE = "https://fsa-crud-2aa9294fe819.herokuapp.com/api/";
-const COHORT = "2511-FTB-CT-WEB-PT/"; // Make sure to change this!
+const BASE = "https://fsa-crud-2aa9294fe819.herokuapp.com/api";
+const COHORT = ""; // Make sure to change this!
 const API = BASE + COHORT;
 
 // === State ===
@@ -12,7 +12,7 @@ let guests = [];
 /** Updates state with all parties from the API */
 async function getParties() {
   try {
-    const response = await fetch(API + "events");
+    const response = await fetch(API + "/events");
     const result = await response.json();
     parties = result.data;
     render();
@@ -57,10 +57,10 @@ async function getGuests() {
   }
 }
 
-// add party to the API and update state with the new list of parties
+/** Creates a party via the API */
 async function addParty(party) {
   try {
-    const response = await fetch(API + "/events", {
+    await fetch(API + "/events", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -73,10 +73,10 @@ async function addParty(party) {
   }
 }
 
-// delete party from the API and update state with the new list of parties
+/** Deletes the party with the given ID via the API */
 async function deleteParty(id) {
   try {
-    const response = await fetch(API + "/events/" + id, {
+    await fetch(API + "/events/" + id, {
       method: "DELETE",
     });
     selectedParty = undefined;
@@ -96,9 +96,8 @@ function PartyListItem(party) {
     $li.classList.add("selected");
   }
 
-  // href supports anchor links too, like for selected party name here
   $li.innerHTML = `
-    <a href="#selected">${party.name}</a> 
+    <a href="#selected">${party.name}</a>
   `;
   $li.addEventListener("click", () => getParty(party.id));
   return $li;
@@ -151,6 +150,7 @@ function GuestList() {
     ),
   );
 
+  // Simple components can also be created anonymously:
   const $guests = guestsAtParty.map((guest) => {
     const $guest = document.createElement("li");
     $guest.textContent = guest.name;
@@ -161,38 +161,37 @@ function GuestList() {
   return $ul;
 }
 
-// form that allows users to input details about a new party
+/** Form that allows users to input information about a new party */
 function NewPartyForm() {
   const $form = document.createElement("form");
-  $form.innerHTML = ` 
-  <label> 
-    Name
-    <input name="name" type="text" required>
-  </label>
-  <label>
-    Date
-    <input name="date" type="date" required>
-  </label>
-  <label>
-    Location
-    <input name="location" type="text" required>
-  </label>
-  <label>
-    Description
-    <textarea name="description"></textarea>
-  </label>
-  <button type="submit">Create Party</button>
+  $form.innerHTML = `
+    <label>
+      Name
+      <input name="name" required />
+    </label>
+    <label>
+      Description
+      <input name="description" required />
+    </label>
+    <label>
+      Date
+      <input name="date" type="date" required />
+    </label>
+    <label>
+      Location
+      <input name="location" required />
+    </label>
+    <button>Add party</button>
   `;
-
   $form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData($form);
     const date = new Date(data.get("date")).toISOString();
     addParty({
       name: data.get("name"),
+      description: data.get("description"),
       date,
       location: data.get("location"),
-      description: data.get("description"),
     });
   });
 
@@ -208,14 +207,12 @@ function render() {
       <section>
         <h2>Upcoming Parties</h2>
         <PartyList></PartyList>
+        <h3>Add a new party</h3>
+        <NewPartyForm></NewPartyForm>
       </section>
       <section id="selected">
         <h2>Party Details</h2>
         <SelectedParty></SelectedParty>
-      </section>
-      <section>
-        <h2>Create a New Party</h2>
-        <NewPartyForm></NewPartyForm>
       </section>
     </main>
   `;
